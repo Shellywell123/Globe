@@ -14,7 +14,7 @@ def MPL_Prefs(fig,ax,title_obj,grid):
        # leg = ax.legend(loc=(1.05,0.25), facecolor='none', prop={'size': 10}, handlelength=0.5)
 
         #set subplot preferences
-        fig.subplots_adjust(left=0, right=0.75, bottom=0, top=1)
+        fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 
         #set 3d panel preferences
         ax.w_xaxis.set_pane_color((0.0, 0.0, 0.0, 0.0))
@@ -76,7 +76,9 @@ def MPL_Prefs(fig,ax,title_obj,grid):
 #########################################################
 
 def legend_labeller(func_string_raw):
-    """ function for neatening long function labels"""
+    """
+    function for neatening long function labels
+    """
     to_be_split = ''+func_string_raw+''
     to_be_split = to_be_split.replace(' ','')
     long_legend_label = to_be_split.split('#')[0]

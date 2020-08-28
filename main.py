@@ -8,30 +8,83 @@ import random
 
 class PyGlobe:
 
-    def spherical_to_cartesian(self,theta,phi,R):
+    def spherical_to_cartesian(self,theta,phi,radius):
         """
+        simple spherical to cartesian coord transform
         """
-        x = R * np.sin(theta) * np.cos(phi)
-        y = R * np.sin(theta) * np.sin(phi)
-        z = R* np.cos(theta)
+        x = radius * np.sin(theta) * np.cos(phi)
+        y = radius * np.sin(theta) * np.sin(phi)
+        z = radius * np.cos(theta)
 
         return x,y,z
 
-    def cartesian_transformation_tilt(self,x,y,z,tilt,Rpos):
+    def degrees_to_radians(self,angle):
         """
+        degrees to radians angle converter
         """
-        tilt = float(-tilt/180)*np.pi
-        z = z*np.cos(tilt) + x*np.sin(tilt)
-        x = Rpos -z*np.sin(tilt) + x*np.cos(tilt)
+        angle = float(angle/180)*np.pi
+        return angle
+
+    def cartesian_transformation_radial(self,x,y,z,orbit_radius,orbital_inclination):
+        """
+        orbiatal position and inclination
+         
+        """
+        orbital_inclination = self.degrees_to_radians(orbital_inclination)
+
+        x = x
+        y = y + orbit_radius
+        z = z
         return x,y,z
 
-    def coordinate_selector(self):
+
+    def cartesian_transformation_obliquity(self,x,y,z,obliquity):
         """
+        converts cartesian coords to cartesian coords with a obliquity tilt 
         """
-        return None
+        obliquity = self.degrees_to_radians(-obliquity)
+        z =  z*np.cos(obliquity) + x*np.sin(obliquity)
+        x = -z*np.sin(obliquity) + x*np.cos(obliquity)
+        return x,y,z
+
+    def coordinate_selector(self,longitude,latitude):
+        """
+        will indicate a point on earth with a point plotted on the globe
+        """
+        longitude = self.degrees_to_radians(longitude)
+        latitude  = self.degrees_to_radians(latitude)
+
+        x,y,z=self.spherical_to_cartesian(longitude,latitude,body_radius)
+
+        ax.plot([x,x+100],[y,y+100],[z,z+100],c='r')
+
+        
+    def plot_orbit(self,ax,colour,orbit_radius,orbital_inclination):
+        """
+        plots a bodies orbital path
+        """
+        orbital_inclination = self.degrees_to_radians(orbital_inclination)
+
+        x_data = []
+        y_data = []
+        z_data = []
+        
+        theta = 2*np.pi/100
+        
+        for i in range(100+1):
+            x_orb = orbit_radius*np.cos(theta * i)
+            y_orb = orbit_radius*np.sin(theta * i)
+            z_orb = x_orb * np.sin(orbital_inclination)
+            
+            x_data.append(x_orb)
+            y_data.append(y_orb)
+            z_data.append(z_orb)
+                
+        ax.plot(x_data,y_data,z_data,color=colour,linewidth=1,linestyle='--')
  
-    def spherical_body(self,ax,name,image_file,R,tilt,Rpos):
+    def spherical_body(self,ax,name,image_file,body_radius,obliquity,orbit_radius,orbital_inclination):
         """
+        generates a rendered spherical body
         """
 
         img = plt.imread(image_file)
@@ -53,13 +106,22 @@ class PyGlobe:
         theta,phi = np.meshgrid(theta, phi)
         
         # transformations
-        x,y,z = self.spherical_to_cartesian(theta,phi,R)
-        x,y,z = self.cartesian_transformation_tilt(x,y,z,tilt,Rpos)
+
+        #spherical
+        x,y,z = self.spherical_to_cartesian(theta,phi,body_radius)
+        #body tilt
+        x,y,z = self.cartesian_transformation_obliquity(x,y,z,obliquity)
+        #orbit dist and inclination
+        x,y,z = self.cartesian_transformation_radial(x,y,z,orbit_radius,orbital_inclination)
+
+        if orbit_radius != 0:
+            
+            self.plot_orbit(ax,'grey',orbit_radius,orbital_inclination)
 
         ax.plot_surface(x.T, y.T, z.T, facecolors=img/255, cstride=1, rstride=1)
         print('Created {}'.format(name))
 
-            
+
     def starry_night(self,ax,max_lim,num_of_Stars):
         """
         plots random stars in foreground and background
@@ -103,12 +165,10 @@ class PyGlobe:
 if __name__ == "__main__":
     g = PyGlobe()
 
-    # create 3d Axes
-    fig = plt.figure()
+    fig = plt.figure('Globe')
     ax = fig.add_subplot(111, projection='3d')
 
     #set axis lims
-
     max_lim =  13000
     min_lim = -max_lim
     
@@ -121,20 +181,39 @@ if __name__ == "__main__":
     ax.set_zlim3d([min_lim,max_lim])
     ax.set_zlabel('km')
 
-    g.starry_night(ax,max_lim*5,6000)
+    ######################################################################################
+    # Space
+    star_distance   = max_lim*5
+    number_of_stars = 6000
+    g.starry_night(ax,star_distance,number_of_stars)
 
     #use Equirectangular projections for img files
-    earth_img = 'surfaces/earth.jpg'
-    earth_radius          = 6378 #km
-    earth_radial_position = 0 #km
-    earth_tilt            = 23.5 #degs
-    g.spherical_body(ax,'Earth',earth_img,earth_radius,earth_tilt,earth_radial_position)
 
-    moon_img = 'surfaces/moon.jpg'
-    moon_radius          = 1737.5 #km
-    moon_radial_position = 12000 #km (should be 384000)
-    moon_tilt            = 6.7 #degs
-    g.spherical_body(ax,'Moon',moon_img,moon_radius,moon_tilt,moon_radial_position)
+    ######################################################################################
+    # Earth
+
+    name                = 'Earth'
+    img                 = 'surfaces/earth.jpg'
+    body_radius         = 6378 #km
+    radial_position     = 0 #km
+    obliquity           = 23.5 #degs
+    orbital_inclination = 0
+    g.spherical_body(ax,name,img,body_radius,obliquity,radial_position,orbital_inclination)
+
+    ######################################################################################
+    # Moon
+
+    name                = 'Moon'
+    img                 = 'surfaces/moon.jpg'
+    body_radius         = 1737.5 #km
+    radial_position     = 12000 #km (should be 384000)
+    obliquity           = -6.7 #degs
+    orbital_inclination = 5
+    g.spherical_body(ax,name,img,body_radius,obliquity,radial_position,orbital_inclination)
+
+    ######################################################################################
+
+    #g.coordinate_selector(0,0)
 
     MPL_Prefs(fig,ax,'','grid')
     plt.show()
