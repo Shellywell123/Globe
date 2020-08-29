@@ -3,10 +3,20 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from MPLP import *
 import random
+import os 
 
+################################################################################
 ################################################################################
 
 class PyGlobe:
+
+    def __init__(self):
+        """
+        """
+        print('#'*55)
+        print(' PyGlobe initalised '+self.get_live_time())
+        print('#'*55)
+
 
     def spherical_to_cartesian(self,theta,phi,radius):
         """
@@ -18,6 +28,8 @@ class PyGlobe:
 
         return x,y,z
 
+    ######################################################################################
+    
     def degrees_to_radians(self,angle):
         """
         degrees to radians angle converter
@@ -25,6 +37,8 @@ class PyGlobe:
         angle = float(angle/180)*np.pi
         return angle
 
+    ######################################################################################
+    
     def cartesian_transformation_radial(self,x,y,z,orbit_radius,orbital_inclination):
         """
         orbiatal position and inclination
@@ -37,7 +51,8 @@ class PyGlobe:
         z = z
         return x,y,z
 
-
+    ######################################################################################
+    
     def cartesian_transformation_obliquity(self,x,y,z,obliquity):
         """
         converts cartesian coords to cartesian coords with a obliquity tilt 
@@ -47,6 +62,8 @@ class PyGlobe:
         x = -z*np.sin(obliquity) + x*np.cos(obliquity)
         return x,y,z
 
+    ######################################################################################
+    
     def coordinate_selector(self,longitude,latitude):
         """
         will indicate a point on earth with a point plotted on the globe
@@ -61,7 +78,8 @@ class PyGlobe:
 
         ax.plot([x,dx],[y,dy],[z,dz],c='r')
 
-        
+    ######################################################################################
+    
     def plot_orbit(self,ax,colour,orbit_radius,orbital_inclination):
         """
         plots a bodies orbital path
@@ -85,6 +103,8 @@ class PyGlobe:
                 
         ax.plot(x_data,y_data,z_data,color=colour,linewidth=1,linestyle='--')
  
+    ######################################################################################
+    
     def spherical_body(self,ax,name,image_file,body_radius,obliquity,orbit_radius,orbital_inclination):
         """
         generates a rendered spherical body
@@ -124,7 +144,8 @@ class PyGlobe:
         ax.plot_surface(x.T, y.T, z.T, facecolors=img/255, cstride=1, rstride=1)
         print('Created {}'.format(name))
 
-
+    ######################################################################################
+    
     def starry_night(self,ax,max_lim,num_of_Stars):
         """
         plots random stars in foreground and background
@@ -163,16 +184,48 @@ class PyGlobe:
         ax.scatter(x3, x1, x2, c='white', s=s)
         print('Created Stars')
 
+    ######################################################################################
+    
+    def get_live_time(self):
+        """
+        returns live time and date
+        """
+
+        day   = str(os.popen("date +%A").readlines())[2:-4]
+        month_int = int(str(os.popen("date +%m").readlines())[2:-4])
+        date  = str(os.popen("date +%W").readlines())[2:-4]
+        year  = str(os.popen("date +%Y").readlines())[2:-4]
+        time  = str(os.popen("date +%X").readlines())[2:-7]
+
+        months = ['January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December']
+
+        month = months [month_int-1]
+
+        live = '{} - {} {}/{}/2020'.format(time,day,date,month,year)
+        return live
+
+################################################################################
 ################################################################################
 
 if __name__ == "__main__":
     g = PyGlobe()
 
-    fig = plt.figure('Globe')
+    fig = plt.figure('Globe '+ g.get_live_time())
     ax = fig.add_subplot(111, projection='3d')
 
     #set axis lims
-    max_lim =  13000
+    max_lim =  8000
     min_lim = -max_lim
     
     ax.set_xlim3d([min_lim,max_lim])
@@ -186,7 +239,7 @@ if __name__ == "__main__":
 
     ######################################################################################
     # Space
-    star_distance   = max_lim*5
+    star_distance   = max_lim*7
     number_of_stars = 6000
     g.starry_night(ax,star_distance,number_of_stars)
 
@@ -218,5 +271,5 @@ if __name__ == "__main__":
 
     g.coordinate_selector(0,0)
 
-    MPL_Prefs(fig,ax,'','grid')
+    MPL_Prefs(fig,ax,'','no_grid')
     plt.show()

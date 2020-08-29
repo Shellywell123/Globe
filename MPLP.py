@@ -21,24 +21,31 @@ def MPL_Prefs(fig,ax,title_obj,grid):
         ax.w_yaxis.set_pane_color((0.0, 0.0, 0.0, 0.0))
         ax.w_zaxis.set_pane_color((0.0, 0.0, 0.0, 0.0))
         
+        grid_color = "k"
+        label_colour ="k"
+
+        if grid == 'grid':
+            grid_color = "green"
+            label_colour ="lime"
+
         #set spline preferences
-        ax.spines['bottom'].set_color('lime')
-        ax.spines['top'   ].set_color('lime')
+        ax.spines['bottom'].set_color(label_colour)
+        ax.spines['top'   ].set_color(label_colour)
 
         #set axis label preferences
         ax.set_xlabel('$x [km]$')
         ax.set_ylabel('$y [km]$')
         ax.set_zlabel('$z [km]$')
-        ax.xaxis.label.set_color('lime')
-        ax.yaxis.label.set_color('lime')
-        ax.zaxis.label.set_color('lime')
+        ax.xaxis.label.set_color(label_colour)
+        ax.yaxis.label.set_color(label_colour)
+        ax.zaxis.label.set_color(label_colour)
 
         #set grid preferences
-        ax.zaxis._axinfo["grid"]['color'] = "green" 
+        ax.zaxis._axinfo["grid"]['color'] = grid_color
         ax.zaxis._axinfo["grid"]["linewidth"] = 0.5
-        ax.yaxis._axinfo["grid"]['color'] = "green" 
+        ax.yaxis._axinfo["grid"]['color'] = grid_color
         ax.yaxis._axinfo["grid"]["linewidth"] = 0.5
-        ax.xaxis._axinfo["grid"]['color'] = "green"
+        ax.xaxis._axinfo["grid"]['color'] = grid_color
         ax.xaxis._axinfo["grid"]["linewidth"] = 0.5
 
     ############################################################################################
