@@ -1,5 +1,5 @@
 # Globe
-Small python 3 project written as a stepping stone for my other repo [Shellywell123](https://github.com/Shellywell123/Solar_System). Aims of rendering and animating the rotation and orbit of planets using matplotlib.
+Small python 3 project written as a stepping stone for my other repo [Solar_System](https://github.com/Shellywell123/Solar_System). Aims of rendering and animating the rotation and orbit of planets using matplotlib.
 
 ![screenshot](Images/lunar.gif)
 
