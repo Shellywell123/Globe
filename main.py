@@ -51,12 +51,15 @@ class PyGlobe:
         """
         will indicate a point on earth with a point plotted on the globe
         """
-        longitude = self.degrees_to_radians(longitude)
-        latitude  = self.degrees_to_radians(latitude)
+        orbital_inclination = self.degrees_to_radians(23.5)
 
-        x,y,z=self.spherical_to_cartesian(longitude,latitude,body_radius)
+        longitude = self.degrees_to_radians(longitude+ 180)
+        latitude  = self.degrees_to_radians(latitude )
 
-        ax.plot([x,x+100],[y,y+100],[z,z+100],c='r')
+        x,y,z    = self.spherical_to_cartesian(latitude,longitude,body_radius+1)
+        dx,dy,dz = self.spherical_to_cartesian(latitude,longitude,body_radius + 10000)
+
+        ax.plot([x,dx],[y,dy],[z,dz],c='r')
 
         
     def plot_orbit(self,ax,colour,orbit_radius,orbital_inclination):
@@ -197,7 +200,7 @@ if __name__ == "__main__":
     body_radius         = 6378 #km
     radial_position     = 0 #km
     obliquity           = 23.5 #degs
-    orbital_inclination = 0
+    orbital_inclination = 0 #degs
     g.spherical_body(ax,name,img,body_radius,obliquity,radial_position,orbital_inclination)
 
     ######################################################################################
@@ -208,12 +211,12 @@ if __name__ == "__main__":
     body_radius         = 1737.5 #km
     radial_position     = 12000 #km (should be 384000)
     obliquity           = -6.7 #degs
-    orbital_inclination = 5
+    orbital_inclination = 5 #degs
     g.spherical_body(ax,name,img,body_radius,obliquity,radial_position,orbital_inclination)
 
     ######################################################################################
 
-    #g.coordinate_selector(0,0)
+    g.coordinate_selector(0,0)
 
     MPL_Prefs(fig,ax,'','grid')
     plt.show()
