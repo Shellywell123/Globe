@@ -108,30 +108,29 @@ class PyGlobe:
  
     ######################################################################################
     
-    def caculate_position_and_orientation(self,date,orbit_radius,obliquity,name):
+    def calculate_position_and_orientation(self,date,hour,orbit_radius,obliquity,orbit_duration_days):
         """
         calculates the orbital position of a body given a date
         """
 
-        if name=='Moon':
-            #currently centered around earth
-           
-            day = date.split('/')[0]
-            
-            # to be made correct 
-            angluar_orbital_position = (float(day)/28)*np.pi*2
+        #currently centered around earth
+        
+        day = int(date.split('/')[0])
+        
+        # to be made correct 
+        angluar_orbital_position = (float(day+(hour/24.))/orbit_duration_days)*np.pi*2
 
-            # to be made correct should always face earth
-            obliquity = obliquity
+        # to be made correct should always face earth
+        obliquity = obliquity
 
-            #to be made elliptical
-            orbit_radius=orbit_radius
+        #to be made elliptical
+        orbit_radius=orbit_radius
 
-            return orbit_radius,obliquity,angluar_orbital_position
+        return orbit_radius,obliquity,angluar_orbital_position
 
     ######################################################################################
 
-    def spherical_body(self,ax,date,name,image_file,body_radius,obliquity,orbit_radius,orbital_inclination):
+    def spherical_body(self,ax,date,hour,name,image_file,body_radius,obliquity,orbit_radius,orbital_inclination,rotation_duration_hrs,orbit_duration_days):
         """
         generates a rendered spherical body
         """
@@ -141,7 +140,14 @@ class PyGlobe:
 
         # define a grid matching the map size, subsample along with pixel    
         theta = np.linspace(0, np.pi, img.shape[0])
-        phi   = np.linspace(0, 2*np.pi, img.shape[1])
+        if name == 'Earth':
+            rot   = float(2*np.pi*hour/rotation_duration_hrs)
+
+        if name == 'Moon':
+            day = int(date.split('/')[0])
+            rot   = float(2*np.pi*(int(day)*24+hour)/rotation_duration_hrs)
+
+        phi   = np.linspace(0+rot, 2*np.pi+rot, img.shape[1])
 
         count = 180 # keep 180 points along theta and phi
 
@@ -163,7 +169,7 @@ class PyGlobe:
         
 
         if orbit_radius != 0:
-            orbit_radius,obliquity,angluar_orbital_position=self.caculate_position_and_orientation(date,orbit_radius,obliquity,name)
+            orbit_radius,obliquity,angluar_orbital_position=self.calculate_position_and_orientation(date,hour,orbit_radius,obliquity,orbit_duration_days)
             self.plot_orbit(ax,'grey',orbit_radius,orbital_inclination)
             #orbital position
             x,y,z = self.cartesian_transformation_radial(x,y,z,orbit_radius,orbital_inclination,angluar_orbital_position)
@@ -178,6 +184,8 @@ class PyGlobe:
         """
         plots random stars in foreground and background
         """
+
+        random.seed(1)
         
         ax.set_facecolor('black')
         
@@ -227,7 +235,7 @@ class PyGlobe:
 
     ######################################################################################
 
-    def plot(self,date):       
+    def plot(self,date,hour,coord_selector,show):       
         """
         plots eath moon system given a date eg 01/01/2000
         """
@@ -235,7 +243,7 @@ class PyGlobe:
         if date=='live':
             date=(self.get_live_time().split(' ')[-1])
 
-        print(date)
+        print('{}:00 {}'.format(hour,date))
 
         fig = plt.figure('Globe '+ date)
         ax = fig.add_subplot(111, projection='3d')
@@ -264,51 +272,68 @@ class PyGlobe:
         ######################################################################################
         # Earth
 
-        name                = 'Earth'
-        img                 = 'surfaces/earth.jpg'
-        body_radius         = 6378 #km
-        radial_position     = 0 #km
-        obliquity           = 23.5 #degs
-        orbital_inclination = 0 #degs
-        self.spherical_body(ax,date,name,img,body_radius,obliquity,radial_position,orbital_inclination)
+        name                  = 'Earth'
+        img                   = 'surfaces/earth.jpg'
+        body_radius           = 6378 #km
+        radial_position       = 0 #km
+        obliquity             = 23.5 #degs
+        orbital_inclination   = 0 #degs
+        rotation_duration_hrs = 24
+        orbit_duration_days   = 0
+        self.spherical_body(ax,date,hour,name,img,body_radius,obliquity,radial_position,orbital_inclination,rotation_duration_hrs,orbit_duration_days)
 
         ######################################################################################
         # Moon
 
-        name                = 'Moon'
-        img                 = 'surfaces/moon.jpg'
-        body_radius         = 1737.5 #km
-        radial_position     = 12000 #km (should be 384000)
-        obliquity           = -6.7 #degs
-        orbital_inclination = 5 #degs
-        self.spherical_body(ax,date,name,img,body_radius,obliquity,radial_position,orbital_inclination)
+        name                  = 'Moon'
+        img                   = 'surfaces/moon.jpg'
+        body_radius           = 1737.5 #km
+        radial_position       = 12000 #km (should be 384000)
+        obliquity             = -6.7 #degs
+        orbital_inclination   = 5 #degs
+        rotation_duration_hrs = 28*24
+        orbit_duration_days   = 28
+        self.spherical_body(ax,date,hour,name,img,body_radius,obliquity,radial_position,orbital_inclination,rotation_duration_hrs,orbit_duration_days)
 
         ######################################################################################
 
-        self.coordinate_selector(ax,0,0) #currently on renders behind a sphere
+        if coord_selector != None:
+            self.coordinate_selector(ax,0,0) #currently on renders behind a sphere
 
         MPL_Prefs(fig,ax,'','no_grid')
 
-        #uncomment when making photos for a gif
-        # plt.savefig('Images/progression/{}.png'.format(date.replace('/','-')))
-        # print(' - Image saved')
-        plt.show()
+        if show != None:
+            plt.show()
 
 ################################################################################
 # End of class
 ################################################################################
-
-#generate 28 pictures
 
 def make_gif():
     """
     generates screenshots of the program across a 28 days and then compiles them into a gif
     """
     g = PyGlobe()
-    for day in range(1,28):
-        date = "{}/08/2020".format(day)
-        g.plot(date)
 
+    # every day date in a 28 cycle in 1 day incriments
+    for day in range(1,28,1):
+        date = "{}/08/2020".format(day)
+
+        # every hour in 6 hour incriments
+        for hour in range(0,24,4):
+            g.plot(date,hour,None,None)
+
+            if len(str(hour)) == 1:
+                hour = str('0{}'.format(hour))
+
+            if len(str(day)) == 1:
+                date = "0{}/08/2020".format(day)
+
+            filename = 'Images/progression/{}_{}-00.png'.format(date.replace('/','-'),hour)
+            plt.savefig(filename)
+            print(' - Image saved')
+
+    # convert all saved images to a single gif
     import imageio
     images = []
     for filename in os.listdir('Images/progression/'):
@@ -316,8 +341,9 @@ def make_gif():
     imageio.mimsave('Images/lunar.gif', images)
     print('gif made')
 
+################################################################################
 
-# make_gif()
+make_gif()
 
 g = PyGlobe()
-g.plot('live')
+g.plot('live',hour,'locate','show')
