@@ -19,7 +19,8 @@ class PyGlobe:
         print(' PyGlobe initalised '+self.get_live_time())
         print('#'*55)
 
-
+    ######################################################################################
+    
     def spherical_to_cartesian(self,theta,phi,radius):
         """
         simple spherical to cartesian coord transform
@@ -243,6 +244,9 @@ class PyGlobe:
         if date=='live':
             date=(self.get_live_time().split(' ')[-1])
 
+        if hour =='live':
+            hour=int((self.get_live_time().split(' ')[0]).split(':')[0])
+
         print('{}:00 {}'.format(hour,date))
 
         fig = plt.figure('Globe '+ date)
@@ -343,7 +347,7 @@ def make_gif():
 
 ################################################################################
 
-make_gif()
+#make_gif()
 
 g = PyGlobe()
-g.plot('live',hour,'locate','show')
+g.plot('live','live','locate','show')
